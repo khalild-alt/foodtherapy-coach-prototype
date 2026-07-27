@@ -73,7 +73,7 @@
     body { padding: 0; }
     .app { max-width: 100%; }
     .intro-title, .intro-subtitle { display: none; }
-    .tabs { margin: 0; border-radius: 0; }
+    .tabs { margin: 0; border-radius: 0; position: sticky; top: 0; z-index: 20; background: var(--bg); box-shadow: 0 1px 0 var(--border); }
     .tabs button { border-radius: 0; padding: 14px 10px; }
     #patient-app .app-label { display: none; }
     .phone-wrap { display: block; }
@@ -81,10 +81,17 @@
     .phone-screen { border-radius: 0; height: auto; min-height: calc(100dvh - 49px); }
     .phone-statusbar { display: none; }
     .push-notif { top: 10px; }
-    .phone-content { padding: 16px; }
+    .phone-content { padding: 16px; overflow-y: visible; }
     .phone-home-indicator { display: none; }
     #view-nutri { padding: 16px; }
     #view-nutri .app-label { padding: 0; }
+    .kpis { grid-template-columns: 1fr 1fr; }
+    .kpis .kpi:last-child { grid-column: span 2; }
+    .responsive-table thead { display: none; }
+    .responsive-table, .responsive-table tbody, .responsive-table tr, .responsive-table td { display: block; width: 100%; }
+    .responsive-table tr { border: 1px solid var(--border); border-radius: 10px; padding: 4px 12px; margin-bottom: 10px; }
+    .responsive-table td { border-bottom: none; padding: 6px 0; display: flex; justify-content: space-between; gap: 10px; text-align: right; }
+    .responsive-table td::before { content: attr(data-label); color: var(--muted); font-weight: 500; text-align: left; }
   }
 </style>
 </head>
@@ -341,11 +348,15 @@
     <div class="alert" style="background:var(--warn-bg); color:var(--warn-text);">⚠ Nora K. — motivation faible cette semaine</div>
 
     <div class="label">Patientes</div>
-    <table>
-      <tr><th>Patiente</th><th>Objectif</th><th>Observance</th><th>Prochain RDV</th></tr>
-      <tr><td>Camille M.</td><td>Petit-déjeuner protéiné</td><td class="ok">85%</td><td>3 août</td></tr>
-      <tr><td>Sarah B.</td><td>Marche 30 min</td><td class="bad">42%</td><td>29 juillet</td></tr>
-      <tr><td>Julie M.</td><td>Compléments réguliers</td><td class="mid">61%</td><td>5 août</td></tr>
+    <table class="responsive-table">
+      <thead>
+        <tr><th>Patiente</th><th>Objectif</th><th>Observance</th><th>Prochain RDV</th></tr>
+      </thead>
+      <tbody>
+        <tr><td data-label="Patiente">Camille M.</td><td data-label="Objectif">Petit-déjeuner protéiné</td><td data-label="Observance" class="ok">85%</td><td data-label="Prochain RDV">3 août</td></tr>
+        <tr><td data-label="Patiente">Sarah B.</td><td data-label="Objectif">Marche 30 min</td><td data-label="Observance" class="bad">42%</td><td data-label="Prochain RDV">29 juillet</td></tr>
+        <tr><td data-label="Patiente">Julie M.</td><td data-label="Objectif">Compléments réguliers</td><td data-label="Observance" class="mid">61%</td><td data-label="Prochain RDV">5 août</td></tr>
+      </tbody>
     </table>
 
     <div class="label">Résumé pré-consultation — Camille M.</div>
