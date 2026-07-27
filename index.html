@@ -144,14 +144,11 @@
 
     <div class="label">Journal alimentaire</div>
     <div class="card">
-      <div style="display:flex; gap:10px; align-items:center; margin-bottom:12px;">
-        <label for="meal-photo" style="display:flex; align-items:center; justify-content:center; width:56px; height:56px; border:1px dashed var(--border); border-radius:8px; cursor:pointer; overflow:hidden; flex-shrink:0; background:#fff;">
-          <img id="meal-photo-preview" style="display:none; width:100%; height:100%; object-fit:cover;">
-          <span id="meal-photo-icon" style="font-size:18px; color:var(--muted);">📷</span>
-        </label>
-        <input type="file" id="meal-photo" accept="image/*" style="display:none;">
-        <div style="font-size:12px; color:var(--muted);">Photo du repas</div>
+      <label style="font-size:12px; color:var(--muted); display:block; margin-bottom:6px;">Photos du repas</label>
+      <div id="meal-photos-row" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
+        <label for="meal-photo" id="meal-photo-add" style="display:flex; align-items:center; justify-content:center; width:56px; height:56px; border:1px dashed var(--border); border-radius:8px; cursor:pointer; flex-shrink:0; background:#fff; font-size:20px; color:var(--muted);">+</label>
       </div>
+      <input type="file" id="meal-photo" accept="image/*" multiple style="display:none;">
 
       <label style="font-size:12px; color:var(--muted);">Nombre de collations aujourd'hui</label>
       <select id="snack-count" style="margin-bottom:12px;">
@@ -161,13 +158,12 @@
         <option value="3">3</option>
       </select>
 
-      <div id="snack-photo-wrap" style="display:none; align-items:center; gap:10px; margin-bottom:12px;">
-        <label for="snack-photo" style="display:flex; align-items:center; justify-content:center; width:56px; height:56px; border:1px dashed var(--border); border-radius:8px; cursor:pointer; overflow:hidden; flex-shrink:0; background:#fff;">
-          <img id="snack-photo-preview" style="display:none; width:100%; height:100%; object-fit:cover;">
-          <span id="snack-photo-icon" style="font-size:18px; color:var(--muted);">📷</span>
-        </label>
-        <input type="file" id="snack-photo" accept="image/*" style="display:none;">
-        <div style="font-size:12px; color:var(--muted);">Photo de la collation</div>
+      <div id="snack-photo-wrap" style="display:none;">
+        <label style="font-size:12px; color:var(--muted); display:block; margin-bottom:6px;">Photos de la collation</label>
+        <div id="snack-photos-row" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
+          <label for="snack-photo" id="snack-photo-add" style="display:flex; align-items:center; justify-content:center; width:56px; height:56px; border:1px dashed var(--border); border-radius:8px; cursor:pointer; flex-shrink:0; background:#fff; font-size:20px; color:var(--muted);">+</label>
+        </div>
+        <input type="file" id="snack-photo" accept="image/*" multiple style="display:none;">
       </div>
 
       <label style="font-size:12px; color:var(--muted);">Pourquoi avez-vous mangé ceci ?</label>
@@ -310,15 +306,18 @@
 
     <div class="label">Messagerie</div>
     <div class="card">
-      <div style="display:flex; gap:8px;">
-        <div class="avatar" style="background:var(--pro-bg); color:var(--pro-text);">DR</div>
-        <div class="chat-bubble chat-them">Comment se passe la nouvelle routine du matin ?</div>
+      <div id="chat-messages">
+        <div style="display:flex; gap:8px;">
+          <div class="avatar" style="background:var(--pro-bg); color:var(--pro-text);">DR</div>
+          <div class="chat-bubble chat-them">Comment se passe la nouvelle routine du matin ?</div>
+        </div>
+        <div class="chat-bubble chat-me">Plutôt bien, le petit-déjeuner protéiné passe mieux !</div>
       </div>
-      <div class="chat-bubble chat-me">Plutôt bien, le petit-déjeuner protéiné passe mieux !</div>
       <div style="display:flex; gap:8px; margin-top:6px;">
-        <input type="text" placeholder="Écrire un message">
-        <button style="border:1px solid var(--border); border-radius:6px; background:#fff; padding:0 10px; cursor:pointer;">📷</button>
-        <button style="border:1px solid var(--border); border-radius:6px; background:#fff; padding:0 10px; cursor:pointer;">🎤</button>
+        <input type="text" id="chat-input" placeholder="Écrire un message">
+        <button aria-label="Joindre une photo" style="border:1px solid var(--border); border-radius:6px; background:#fff; padding:0 10px; cursor:pointer;">📷</button>
+        <button aria-label="Message vocal" style="border:1px solid var(--border); border-radius:6px; background:#fff; padding:0 10px; cursor:pointer;">🎤</button>
+        <button id="chat-send" class="primary" style="width:auto; margin-top:0; padding:0 16px;">Envoyer</button>
       </div>
     </div>
           </div>
@@ -468,44 +467,78 @@ document.getElementById('cfg-save').addEventListener('click', () => {
   setTimeout(() => { pushNotif.classList.add('show'); }, 400);
 });
 
-const mealPhotoInput = document.getElementById('meal-photo');
-const mealPhotoPreview = document.getElementById('meal-photo-preview');
-const mealPhotoIcon = document.getElementById('meal-photo-icon');
-let mealPhotoData = null;
-mealPhotoInput.addEventListener('change', () => {
-  const file = mealPhotoInput.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    mealPhotoData = e.target.result;
-    mealPhotoPreview.src = mealPhotoData;
-    mealPhotoPreview.style.display = 'block';
-    mealPhotoIcon.style.display = 'none';
-  };
-  reader.readAsDataURL(file);
-});
+function setupMultiPhoto(inputId, rowId, addId) {
+  const input = document.getElementById(inputId);
+  const row = document.getElementById(rowId);
+  const addTile = document.getElementById(addId);
+  const photos = [];
 
-const snackPhotoInput = document.getElementById('snack-photo');
-const snackPhotoPreview = document.getElementById('snack-photo-preview');
-const snackPhotoIcon = document.getElementById('snack-photo-icon');
+  function render() {
+    row.querySelectorAll('.photo-thumb').forEach((el) => el.remove());
+    photos.forEach((src, index) => {
+      const thumb = document.createElement('div');
+      thumb.className = 'photo-thumb';
+      thumb.style.cssText = 'position:relative; width:56px; height:56px; flex-shrink:0;';
+      thumb.innerHTML =
+        '<img src="' + src + '" style="width:100%; height:100%; object-fit:cover; border-radius:8px;">' +
+        '<button type="button" data-index="' + index + '" aria-label="Supprimer la photo" style="position:absolute; top:-6px; right:-6px; width:18px; height:18px; border-radius:50%; background:var(--text); color:#fff; border:none; font-size:11px; line-height:1; cursor:pointer; padding:0;">✕</button>';
+      row.insertBefore(thumb, addTile);
+    });
+  }
+
+  row.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-index]');
+    if (!btn) return;
+    photos.splice(Number(btn.dataset.index), 1);
+    render();
+  });
+
+  input.addEventListener('change', () => {
+    const files = Array.from(input.files || []);
+    let remaining = files.length;
+    if (!remaining) return;
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        photos.push(e.target.result);
+        remaining -= 1;
+        if (remaining === 0) render();
+      };
+      reader.readAsDataURL(file);
+    });
+    input.value = '';
+  });
+
+  return {
+    getPhotos: () => photos,
+    reset: () => { photos.length = 0; render(); }
+  };
+}
+
+const mealPhotos = setupMultiPhoto('meal-photo', 'meal-photos-row', 'meal-photo-add');
+const snackPhotos = setupMultiPhoto('snack-photo', 'snack-photos-row', 'snack-photo-add');
+
 const snackPhotoWrap = document.getElementById('snack-photo-wrap');
-let snackPhotoData = null;
-snackPhotoInput.addEventListener('change', () => {
-  const file = snackPhotoInput.files[0];
-  if (!file) return;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    snackPhotoData = e.target.result;
-    snackPhotoPreview.src = snackPhotoData;
-    snackPhotoPreview.style.display = 'block';
-    snackPhotoIcon.style.display = 'none';
-  };
-  reader.readAsDataURL(file);
-});
-
 const snackCountSelect = document.getElementById('snack-count');
 snackCountSelect.addEventListener('change', () => {
-  snackPhotoWrap.style.display = snackCountSelect.value !== '0' ? 'flex' : 'none';
+  snackPhotoWrap.style.display = snackCountSelect.value !== '0' ? 'block' : 'none';
+});
+
+const chatInput = document.getElementById('chat-input');
+const chatMessages = document.getElementById('chat-messages');
+function sendChatMessage() {
+  const text = chatInput.value.trim();
+  if (!text) return;
+  const bubble = document.createElement('div');
+  bubble.className = 'chat-bubble chat-me';
+  bubble.textContent = text;
+  chatMessages.appendChild(bubble);
+  chatInput.value = '';
+  chatInput.focus();
+}
+document.getElementById('chat-send').addEventListener('click', sendChatMessage);
+chatInput.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') sendChatMessage();
 });
 
 function setupYesNoTrigger(yesId, noId, wrapId, triggerId, otherId) {
@@ -547,14 +580,19 @@ document.getElementById('add-journal-entry').addEventListener('click', () => {
   const entry = document.createElement('div');
   entry.style.cssText = 'border:1px solid var(--border); border-radius:8px; padding:10px; display:flex; gap:10px;';
 
+  const mealPhotoList = mealPhotos.getPhotos();
   let photoHtml = '';
-  if (mealPhotoData) {
-    photoHtml = '<img src="' + mealPhotoData + '" style="width:48px; height:48px; object-fit:cover; border-radius:6px; flex-shrink:0;">';
+  if (mealPhotoList.length) {
+    photoHtml = '<div style="display:flex; flex-direction:column; gap:4px; flex-shrink:0;">' +
+      mealPhotoList.slice(0, 3).map((src) => '<img src="' + src + '" style="width:44px; height:44px; object-fit:cover; border-radius:6px;">').join('') +
+      (mealPhotoList.length > 3 ? '<div style="font-size:10px; color:var(--muted); text-align:center;">+' + (mealPhotoList.length - 3) + '</div>' : '') +
+    '</div>';
   }
 
+  const snackPhotoList = snackPhotos.getPhotos();
   let snackPhotoHtml = '';
-  if (snackPhotoData) {
-    snackPhotoHtml = '<img src="' + snackPhotoData + '" style="width:40px; height:40px; object-fit:cover; border-radius:6px; margin-left:6px;">';
+  if (snackPhotoList.length) {
+    snackPhotoHtml = snackPhotoList.map((src) => '<img src="' + src + '" style="width:32px; height:32px; object-fit:cover; border-radius:6px; margin-left:4px;">').join('');
   }
 
   let flagsHtml = '<div style="font-size:12px; color:var(--muted); margin-top:2px; display:flex; align-items:center;">Collations : ' + snackCount + snackPhotoHtml + '</div>';
@@ -588,16 +626,10 @@ document.getElementById('add-journal-entry').addEventListener('click', () => {
   commentEl.value = '';
   snackCountSelect.value = '0';
   snackPhotoWrap.style.display = 'none';
-  snackPhotoData = null;
-  snackPhotoPreview.style.display = 'none';
-  snackPhotoIcon.style.display = 'block';
-  snackPhotoInput.value = '';
+  snackPhotos.reset();
   resetYesNoTrigger('snack-no', 'snack-trigger-wrap', 'snack-trigger', 'snack-trigger-other');
   resetYesNoTrigger('sugar-no', 'sugar-trigger-wrap', 'sugar-trigger', 'sugar-trigger-other');
-  mealPhotoData = null;
-  mealPhotoPreview.style.display = 'none';
-  mealPhotoIcon.style.display = 'block';
-  mealPhotoInput.value = '';
+  mealPhotos.reset();
 });
 
 const tabP = document.getElementById('tab-patiente');
