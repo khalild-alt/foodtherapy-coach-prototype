@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>FoodTherapy Coach — Prototype</title>
+<style>
+  :root {
+    --bg: #FAF9F6;
+    --card: #FFFFFF;
+    --border: #E5E2D9;
+    --text: #262521;
+    --muted: #7A7870;
+    --accent: #1D9E75;
+    --accent-bg: #E1F5EE;
+    --accent-text: #085041;
+    --warn-bg: #FAEEDA;
+    --warn-text: #854F0B;
+    --danger-bg: #FCEBEB;
+    --danger-text: #A32D2D;
+    --pro-bg: #EEEDFE;
+    --pro-text: #3C3489;
+  }
+  * { box-sizing: border-box; font-family: -apple-system, "Segoe UI", Helvetica, Arial, sans-serif; }
+  body { background: var(--bg); color: var(--text); margin: 0; padding: 24px; }
+  .app { max-width: 720px; margin: 0 auto; }
+  h1 { font-size: 20px; font-weight: 600; margin: 0 0 4px; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 20px; }
+  .tabs button { flex: 1; padding: 10px; border-radius: 8px; border: 1px solid var(--border); background: var(--card); font-size: 14px; cursor: pointer; }
+  .tabs button.active { background: var(--text); color: #fff; border-color: var(--text); }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+  .label { font-size: 12px; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: .03em; margin: 20px 0 8px; }
+  .label:first-of-type { margin-top: 0; }
+  .row { display: flex; align-items: center; justify-content: space-between; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .habit { display: flex; align-items: center; gap: 6px; border: 1px solid var(--border); border-radius: 8px; padding: 8px; font-size: 13px; background: var(--card); }
+  .progress-track { height: 6px; background: #EFEEE8; border-radius: 4px; overflow: hidden; margin: 8px 0 4px; }
+  .progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width .2s; }
+  .supp-row { display: flex; align-items: center; gap: 10px; border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; }
+  .supp-time { font-size: 13px; color: var(--muted); min-width: 44px; }
+  .supp-row label { display: flex; align-items: center; gap: 6px; font-size: 14px; flex: 1; }
+  select, input[type=text], input[type=time] { width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; background: #fff; }
+  button.primary { background: var(--text); color: #fff; border: none; border-radius: 8px; padding: 10px; font-size: 14px; cursor: pointer; width: 100%; margin-top: 10px; }
+  .chat-bubble { border-radius: 8px; padding: 8px 12px; font-size: 14px; max-width: 75%; margin-bottom: 8px; }
+  .chat-them { background: #F1F0EA; }
+  .chat-me { background: var(--accent-bg); color: #085041; margin-left: auto; }
+  .avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; flex-shrink: 0; }
+  .kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+  .kpi { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+  .kpi .num { font-size: 22px; font-weight: 600; }
+  .alert { display: flex; align-items: center; gap: 8px; border-radius: 8px; padding: 8px 12px; font-size: 13px; margin-bottom: 6px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 8px 4px; border-bottom: 1px solid var(--border); }
+  th { color: var(--muted); font-weight: 500; }
+  .ok { color: #3B6D11; } .mid { color: var(--warn-text); } .bad { color: var(--danger-text); }
+  #view-nutri { display: none; }
+  .app-label { font-size: 12px; color: var(--muted); text-align: center; margin-bottom: 10px; }
+  .phone-wrap { display: flex; justify-content: center; }
+  .phone-frame { width: 375px; background: #111; border-radius: 44px; padding: 14px; }
+  .phone-screen { background: var(--bg); border-radius: 30px; overflow: hidden; height: 720px; display: flex; flex-direction: column; position: relative; }
+  .push-notif { position: absolute; top: 46px; left: 10px; right: 10px; background: rgba(255,255,255,0.97); border-radius: 14px; padding: 10px 12px; display: flex; align-items: flex-start; gap: 10px; box-shadow: 0 6px 18px rgba(0,0,0,.18); transform: translateY(-160%); transition: transform .45s ease; z-index: 5; }
+  .push-notif.show { transform: translateY(0); }
+  .push-notif-icon { width: 26px; height: 26px; border-radius: 8px; background: var(--accent-bg); display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
+  .push-notif-body { flex: 1; min-width: 0; }
+  .push-notif-title { font-size: 12px; font-weight: 600; }
+  .push-notif-text { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+  .push-notif-close { background: none; border: none; font-size: 13px; color: var(--muted); cursor: pointer; padding: 0; line-height: 1; flex-shrink: 0; }
+  .phone-statusbar { display: flex; justify-content: space-between; align-items: center; padding: 10px 22px 4px; font-size: 13px; font-weight: 600; color: var(--text); flex-shrink: 0; }
+  .phone-content { flex: 1; overflow-y: auto; padding: 4px 16px 16px; }
+  .phone-home-indicator { display: flex; justify-content: center; padding: 8px 0 4px; flex-shrink: 0; }
+  .phone-home-indicator span { width: 120px; height: 4px; background: var(--text); opacity: .5; border-radius: 2px; }
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>FoodTherapy Coach — Prototype</h1>
+  <p style="color:var(--muted); font-size:13px; margin:0 0 20px;">Maquette interactive — données fictives</p>
+
+  <div class="tabs">
+    <button id="tab-patiente" class="active">Espace patiente</button>
+    <button id="tab-nutri">Espace nutritionniste</button>
+  </div>
+
+  <div id="patient-app">
+    <p class="app-label">Application patiente — simulation smartphone</p>
+    <div class="phone-wrap">
+      <div class="phone-frame">
+        <div class="phone-screen">
+          <div class="phone-statusbar">
+            <span>9:41</span>
+            <span>🔋 100%</span>
+          </div>
+          <div class="push-notif" id="push-notif">
+            <div class="push-notif-icon">🍎</div>
+            <div class="push-notif-body">
+              <div class="push-notif-title">FoodTherapy Coach <span id="push-notif-time" style="font-weight:400; color:var(--muted);"></span></div>
+              <div class="push-notif-text" id="push-notif-text"></div>
+            </div>
+            <button class="push-notif-close" id="push-notif-close" aria-label="Fermer">✕</button>
+          </div>
+          <div class="phone-content" id="view-patiente">
+    <div class="row" style="margin-bottom:16px;">
+      <div>
+        <div style="font-weight:600;" id="greeting"></div>
+        <div style="font-size:13px; color:var(--muted);">Lundi 27 juillet</div>
+      </div>
+      <div class="avatar" style="background:var(--accent-bg); color:#085041;">CM</div>
+    </div>
+
+    <div class="card" style="background:var(--accent-bg); border-color:var(--accent-bg);">
+      <div style="font-size:12px; color:#085041; margin-bottom:4px;">Défi de la semaine</div>
+      <div style="font-weight:600; color:#085041;">Semaine sans boissons sucrées</div>
+    </div>
+
+    <div class="card">
+      <div style="font-size:12px; color:var(--muted); font-weight:600; margin-bottom:8px;">Message du jour</div>
+      <div id="daily-message" style="font-size:14px; line-height:1.6;"></div>
+    </div>
+
+    <div class="label">Journal alimentaire</div>
+    <div class="card">
+      <div style="display:flex; gap:10px; align-items:center; margin-bottom:12px;">
+        <label for="meal-photo" style="display:flex; align-items:center; justify-content:center; width:56px; height:56px; border:1px dashed var(--border); border-radius:8px; cursor:pointer; overflow:hidden; flex-shrink:0; background:#fff;">
+          <img id="meal-photo-preview" style="display:none; width:100%; height:100%; object-fit:cover;">
+          <span id="meal-photo-icon" style="font-size:18px; color:var(--muted);">📷</span>
+        </label>
+        <input type="file" id="meal-photo" accept="image/*" style="display:none;">
+        <div style="font-size:12px; color:var(--muted);">Photo du repas</div>
+      </div>
+
+      <label style="font-size:12px; color:var(--muted);">Nombre de collations aujourd'hui</label>
+      <select id="snack-count" style="margin-bottom:12px;">
+        <option value="0">0</option>
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+      </select>
+
+      <label style="font-size:12px; color:var(--muted);">Pourquoi avez-vous mangé ceci ?</label>
+      <select id="meal-reason" style="margin-bottom:12px;">
+        <option value="">Sélectionner...</option>
+        <option>Faim</option>
+        <option>Gourmandise</option>
+        <option>Ennui</option>
+        <option>Stress</option>
+        <option>Social</option>
+        <option>Habitude</option>
+      </select>
+
+      <label style="font-size:12px; color:var(--muted); display:block; margin-bottom:4px;">Grignotage</label>
+      <div style="display:flex; gap:16px; margin-bottom:8px;">
+        <label style="display:flex; align-items:center; gap:6px; font-size:13px;"><input type="radio" name="snack-yn" value="oui" id="snack-yes">Oui</label>
+        <label style="display:flex; align-items:center; gap:6px; font-size:13px;"><input type="radio" name="snack-yn" value="non" id="snack-no" checked>Non</label>
+      </div>
+      <div id="snack-trigger-wrap" style="display:none; margin-bottom:12px;">
+        <select id="snack-trigger">
+          <option value="">Déclencheur...</option>
+          <option>Faim</option>
+          <option>Ennui</option>
+          <option>Stress</option>
+          <option>Fatigue</option>
+          <option>Habitude</option>
+          <option>Autre</option>
+        </select>
+        <input type="text" id="snack-trigger-other" placeholder="Précisez..." style="display:none; margin-top:6px;">
+      </div>
+
+      <label style="font-size:12px; color:var(--muted); display:block; margin-bottom:4px;">Écart sucré</label>
+      <div style="display:flex; gap:16px; margin-bottom:8px;">
+        <label style="display:flex; align-items:center; gap:6px; font-size:13px;"><input type="radio" name="sugar-yn" value="oui" id="sugar-yes">Oui</label>
+        <label style="display:flex; align-items:center; gap:6px; font-size:13px;"><input type="radio" name="sugar-yn" value="non" id="sugar-no" checked>Non</label>
+      </div>
+      <div id="sugar-trigger-wrap" style="display:none; margin-bottom:12px;">
+        <select id="sugar-trigger">
+          <option value="">Déclencheur...</option>
+          <option>Stress</option>
+          <option>Fatigue</option>
+          <option>Ennui</option>
+          <option>Menstruation</option>
+          <option>Joie</option>
+          <option>Autre</option>
+        </select>
+        <input type="text" id="sugar-trigger-other" placeholder="Précisez..." style="display:none; margin-top:6px;">
+      </div>
+
+      <label style="font-size:12px; color:var(--muted);">Commentaire</label>
+      <textarea id="meal-comment" rows="2" placeholder="Un mot sur ce moment..." style="width:100%; padding:6px 8px; border:1px solid var(--border); border-radius:6px; font-size:13px; resize:vertical; font-family:inherit;"></textarea>
+
+      <button class="primary" id="add-journal-entry">Ajouter au journal</button>
+
+      <div id="journal-entries" style="margin-top:12px; display:flex; flex-direction:column; gap:8px;"></div>
+    </div>
+
+    <div class="label">Compléments à prendre</div>
+    <div class="supp-row"><span class="supp-time">08h00</span><label><input type="checkbox">Oméga 3</label><label><input type="checkbox">Vitamine D</label></div>
+    <div class="supp-row"><span class="supp-time">13h00</span><label><input type="checkbox">Berbérine</label></div>
+    <div class="supp-row"><span class="supp-time">22h00</span><label><input type="checkbox">Magnésium</label></div>
+
+    <div class="label">Questionnaire du jour — 1 minute</div>
+    <div class="card">
+      <div class="grid3" style="grid-template-columns:1fr 1fr;">
+        <div>
+          <label style="font-size:12px; color:var(--muted);">Motivation</label>
+          <select><option>Oui</option><option>Non</option></select>
+        </div>
+        <div>
+          <label style="font-size:12px; color:var(--muted);">Sommeil</label>
+          <select><option>Bon</option><option>Moyen</option><option>Mauvais</option></select>
+        </div>
+        <div>
+          <label style="font-size:12px; color:var(--muted);">Envie de sucre</label>
+          <select><option>Stress</option><option>Envie</option><option>Ennui</option><option>Colère</option><option>Fatigue</option></select>
+        </div>
+        <div>
+          <label style="font-size:12px; color:var(--muted);">Sport</label>
+          <select><option>Cardio</option><option>Marche</option><option>Musculation</option><option>Rien</option></select>
+        </div>
+        <div>
+          <label style="font-size:12px; color:var(--muted);">Fatigue</label>
+          <select><option>Oui</option><option>Non</option></select>
+        </div>
+      </div>
+      <button class="primary">Valider le questionnaire</button>
+    </div>
+
+    <div class="label">Ma progression</div>
+    <div class="card">
+      <div style="font-size:12px; color:var(--muted); font-weight:600; margin-bottom:8px;">Poids</div>
+      <svg viewBox="0 0 600 150" width="600" height="150" style="width:100%; height:auto; display:block;">
+        <line x1="40" y1="111" x2="570" y2="111" stroke="var(--danger-text)" stroke-width="1" stroke-dasharray="4,4"></line>
+        <text x="572" y="108" font-size="10" fill="var(--muted)" text-anchor="end">Objectif 65 kg</text>
+        <polyline points="50,24 123,31 196,38 269,47 341,58 414,69 487,75 560,82" fill="none" stroke="#085041" stroke-width="2"></polyline>
+        <circle cx="50" cy="24" r="3" fill="#085041"></circle>
+        <circle cx="123" cy="31" r="3" fill="#085041"></circle>
+        <circle cx="196" cy="38" r="3" fill="#085041"></circle>
+        <circle cx="269" cy="47" r="3" fill="#085041"></circle>
+        <circle cx="341" cy="58" r="3" fill="#085041"></circle>
+        <circle cx="414" cy="69" r="3" fill="#085041"></circle>
+        <circle cx="487" cy="75" r="3" fill="#085041"></circle>
+        <circle cx="560" cy="82" r="3" fill="#085041"></circle>
+        <text x="50" y="26" font-size="11" fill="var(--text)" text-anchor="middle" dy="-8">74,5</text>
+        <text x="560" y="82" font-size="11" fill="var(--text)" font-weight="600" text-anchor="end" dy="-8">68,2 kg</text>
+        <text x="50" y="140" font-size="10" fill="var(--muted)" text-anchor="middle">S1</text>
+        <text x="123" y="140" font-size="10" fill="var(--muted)" text-anchor="middle">S2</text>
+        <text x="196" y="140" font-size="10" fill="var(--muted)" text-anchor="middle">S3</text>
+        <text x="269" y="140" font-size="10" fill="var(--muted)" text-anchor="middle">S4</text>
+        <text x="341" y="140" font-size="10" fill="var(--muted)" text-anchor="middle">S5</text>
+        <text x="414" y="140" font-size="10" fill="var(--muted)" text-anchor="middle">S6</text>
+        <text x="487" y="140" font-size="10" fill="var(--muted)" text-anchor="middle">S7</text>
+        <text x="560" y="140" font-size="10" fill="var(--muted)" text-anchor="middle">S8</text>
+      </svg>
+      <div style="display:flex; justify-content:space-between; font-size:12px; color:var(--muted); margin-top:8px;">
+        <span>Poids initial : 74,5 kg</span>
+        <span>-6,3 kg depuis le début</span>
+      </div>
+
+      <div style="border-top:1px solid var(--border); margin:14px 0 10px;"></div>
+
+      <div style="font-size:12px; color:var(--muted); font-weight:600; margin-bottom:8px;">Tour de taille</div>
+      <div class="row">
+        <span style="font-size:13px; color:var(--muted);">Perdu depuis le début</span>
+        <span style="font-size:15px; font-weight:600; color:#085041;">-4 cm</span>
+      </div>
+      <div class="row" style="margin-top:6px;">
+        <span style="font-size:13px; color:var(--muted);">Valeur actuelle</span>
+        <span style="font-size:15px; font-weight:600;">78 cm</span>
+      </div>
+    </div>
+
+    <div class="label">Analyse Oligoscan</div>
+    <div class="card">
+      <div class="alert" style="background:var(--danger-bg); color:var(--danger-text);">⚠ Magnésium bas — pensez à votre complément du soir</div>
+      <div class="alert" style="background:var(--warn-bg); color:var(--warn-text);">⚠ Zinc sous le seuil recommandé</div>
+      <div class="alert" style="background:var(--warn-bg); color:var(--warn-text); margin-bottom:0;">⚠ Calcium au-dessus du seuil recommandé</div>
+    </div>
+
+    <div class="label">Messagerie</div>
+    <div class="card">
+      <div style="display:flex; gap:8px;">
+        <div class="avatar" style="background:var(--pro-bg); color:var(--pro-text);">DR</div>
+        <div class="chat-bubble chat-them">Comment se passe la nouvelle routine du matin ?</div>
+      </div>
+      <div class="chat-bubble chat-me">Plutôt bien, le petit-déjeuner protéiné passe mieux !</div>
+      <div style="display:flex; gap:8px; margin-top:6px;">
+        <input type="text" placeholder="Écrire un message">
+        <button style="border:1px solid var(--border); border-radius:6px; background:#fff; padding:0 10px; cursor:pointer;">📷</button>
+        <button style="border:1px solid var(--border); border-radius:6px; background:#fff; padding:0 10px; cursor:pointer;">🎤</button>
+      </div>
+    </div>
+          </div>
+          <div class="phone-home-indicator"><span></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="view-nutri">
+    <p class="app-label" style="text-align:left;">Interface web nutritionniste</p>
+    <div style="font-weight:600; margin-bottom:16px;">Tableau de bord — 24 patientes suivies</div>
+
+    <div class="kpis">
+      <div class="kpi"><div style="font-size:12px; color:var(--muted);">Observance moyenne</div><div class="num">78%</div></div>
+      <div class="kpi"><div style="font-size:12px; color:var(--muted);">Alertes actives</div><div class="num">5</div></div>
+      <div class="kpi"><div style="font-size:12px; color:var(--muted);">RDV cette semaine</div><div class="num">9</div></div>
+    </div>
+
+    <div class="label">Message du jour — notification du matin</div>
+    <div class="card">
+      <label style="font-size:12px; color:var(--muted);">Contenu du message</label>
+      <textarea id="cfg-message" rows="2" style="width:100%; padding:6px 8px; border:1px solid var(--border); border-radius:6px; font-size:13px; resize:vertical; font-family:inherit; margin-bottom:10px;">Bravo pour hier ! Aujourd'hui, concentrons-nous sur la marche du matin.</textarea>
+      <div style="display:flex; gap:10px; align-items:flex-end;">
+        <div style="flex:1;">
+          <label style="font-size:12px; color:var(--muted);">Heure d'envoi (créneau du matin)</label>
+          <input type="time" id="cfg-time" value="08:00">
+        </div>
+        <button class="primary" id="cfg-save" style="width:auto; margin-top:0; padding:8px 16px;">Enregistrer</button>
+      </div>
+      <div id="cfg-confirm" style="font-size:12px; color:#085041; margin-top:8px; display:none;">Notification programmée à <span id="cfg-confirm-time"></span> pour les patientes concernées.</div>
+    </div>
+
+    <div class="label">Alertes</div>
+    <div class="alert" style="background:var(--danger-bg); color:var(--danger-text);">⚠ Sarah B. — questionnaire non rempli depuis 4 jours</div>
+    <div class="alert" style="background:var(--warn-bg); color:var(--warn-text);">⚠ Julie M. — oubli répété des compléments</div>
+    <div class="alert" style="background:var(--warn-bg); color:var(--warn-text);">⚠ Nora K. — motivation faible cette semaine</div>
+
+    <div class="label">Patientes</div>
+    <table>
+      <tr><th>Patiente</th><th>Objectif</th><th>Observance</th><th>Prochain RDV</th></tr>
+      <tr><td>Camille M.</td><td>Petit-déjeuner protéiné</td><td class="ok">85%</td><td>3 août</td></tr>
+      <tr><td>Sarah B.</td><td>Marche 30 min</td><td class="bad">42%</td><td>29 juillet</td></tr>
+      <tr><td>Julie M.</td><td>Compléments réguliers</td><td class="mid">61%</td><td>5 août</td></tr>
+    </table>
+
+    <div class="label">Résumé pré-consultation — Camille M.</div>
+    <div class="card">
+      <table>
+        <tr><td style="color:var(--muted);">Objectif principal</td><td style="text-align:right; font-weight:600;">Petit-déjeuner protéiné</td></tr>
+        <tr><td style="color:var(--muted);">Adhérence</td><td style="text-align:right; font-weight:600;">82%</td></tr>
+        <tr><td style="color:var(--muted);">Sommeil moyen</td><td style="text-align:right;">6h45</td></tr>
+        <tr><td style="color:var(--muted);">Hydratation</td><td style="text-align:right; color:#085041;">Bonne</td></tr>
+        <tr><td style="color:var(--muted);">Objectif atteint</td><td style="text-align:right;">Petit-déjeuner</td></tr>
+        <tr><td style="color:var(--muted);">Objectif non atteint</td><td style="text-align:right;">Marche</td></tr>
+        <tr><td style="color:var(--muted); border-bottom:none;">Principal frein</td><td style="text-align:right; border-bottom:none;">Grignotage du soir</td></tr>
+      </table>
+    </div>
+
+    <div class="label">Dossier patient — Camille M.</div>
+    <div class="card">
+      <div style="font-size:12px; color:var(--muted); font-weight:600; margin-bottom:8px;">Analyse pondérale</div>
+      <svg viewBox="0 0 600 150" width="600" height="150" style="width:100%; height:auto; display:block;">
+        <line x1="40" y1="111" x2="570" y2="111" stroke="var(--danger-text)" stroke-width="1" stroke-dasharray="4,4"></line>
+        <text x="572" y="108" font-size="10" fill="var(--muted)" text-anchor="end">Objectif 65 kg</text>
+        <polyline points="50,24 123,31 196,38 269,47 341,58 414,69 487,75 560,82" fill="none" stroke="#085041" stroke-width="2"></polyline>
+        <circle cx="50" cy="24" r="3" fill="#085041"></circle>
+        <circle cx="123" cy="31" r="3" fill="#085041"></circle>
+        <circle cx="196" cy="38" r="3" fill="#085041"></circle>
+        <circle cx="269" cy="47" r="3" fill="#085041"></circle>
+        <circle cx="341" cy="58" r="3" fill="#085041"></circle>
+        <circle cx="414" cy="69" r="3" fill="#085041"></circle>
+        <circle cx="487" cy="75" r="3" fill="#085041"></circle>
+        <circle cx="560" cy="82" r="3" fill="#085041"></circle>
+        <text x="50" y="26" font-size="11" fill="var(--text)" text-anchor="middle" dy="-8">74,5</text>
+        <text x="560" y="82" font-size="11" fill="var(--text)" font-weight="600" text-anchor="end" dy="-8">68,2 kg</text>
+        <text x="50" y="140" font-size="10" fill="var(--muted)" text-anchor="middle">S1</text>
+        <text x="123" y="140" font-size="10" fill="var(--muted)" text-anchor="middle">S2</text>
+        <text x="196" y="140" font-size="10" fill="var(--muted)" text-anchor="middle">S3</text>
+        <text x="269" y="140" font-size="10" fill="var(--muted)" text-anchor="middle">S4</text>
+        <text x="341" y="140" font-size="10" fill="var(--muted)" text-anchor="middle">S5</text>
+        <text x="414" y="140" font-size="10" fill="var(--muted)" text-anchor="middle">S6</text>
+        <text x="487" y="140" font-size="10" fill="var(--muted)" text-anchor="middle">S7</text>
+        <text x="560" y="140" font-size="10" fill="var(--muted)" text-anchor="middle">S8</text>
+      </svg>
+      <table style="margin-top:8px;">
+        <tr><td style="color:var(--muted);">Poids actuel</td><td style="text-align:right; font-weight:600;">68,2 kg</td></tr>
+        <tr><td style="color:var(--muted);">Poids initial</td><td style="text-align:right;">74,5 kg</td></tr>
+        <tr><td style="color:var(--muted);">Objectif</td><td style="text-align:right;">65 kg</td></tr>
+        <tr><td style="color:var(--muted);">Évolution</td><td style="text-align:right; color:#085041;">-6,3 kg depuis le début du suivi</td></tr>
+        <tr><td style="color:var(--muted);">IMC</td><td style="text-align:right;">24,1</td></tr>
+        <tr><td style="color:var(--muted);">Tour de taille initial</td><td style="text-align:right;">82 cm</td></tr>
+        <tr><td style="color:var(--muted);">Tour de taille perdu</td><td style="text-align:right; color:#085041;">-4 cm</td></tr>
+        <tr><td style="color:var(--muted); border-bottom:none;">Tour de taille actuel</td><td style="text-align:right; font-weight:600; border-bottom:none;">78 cm</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <div class="row" style="margin-bottom:8px;">
+        <div style="font-size:12px; color:var(--muted); font-weight:600;">Analyse Oligoscan</div>
+        <div style="font-size:12px; color:var(--muted);">Dernier scan : 12 juillet</div>
+      </div>
+      <div class="alert" style="background:var(--danger-bg); color:var(--danger-text);">⚠ Carence détectée — Magnésium bas (déficit)</div>
+      <div class="alert" style="background:var(--warn-bg); color:var(--warn-text);">⚠ Zinc sous le seuil recommandé</div>
+      <div class="alert" style="background:var(--warn-bg); color:var(--warn-text); margin-bottom:12px;">⚠ Calcium au-dessus du seuil recommandé</div>
+      <table>
+        <tr><th>Élément</th><th>Niveau</th><th>Statut</th></tr>
+        <tr><td>Magnésium</td><td>Bas</td><td class="bad">Déficit</td></tr>
+        <tr><td>Zinc</td><td>Bas</td><td class="mid">Sous le seuil</td></tr>
+        <tr><td>Sélénium</td><td>Normal</td><td class="ok">Normal</td></tr>
+        <tr><td>Fer</td><td>Normal</td><td class="ok">Normal</td></tr>
+        <tr><td>Calcium</td><td>Élevé</td><td class="mid">Au-dessus du seuil</td></tr>
+        <tr><td style="border-bottom:none;">Potassium</td><td style="border-bottom:none;">Normal</td><td class="ok" style="border-bottom:none;">Normal</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const prenom = "Camille";
+document.getElementById('greeting').textContent = 'Bonjour ' + prenom;
+
+function applyDailyMessage(message, time) {
+  document.getElementById('daily-message').textContent = message;
+  document.getElementById('push-notif-text').textContent = message;
+  document.getElementById('push-notif-time').textContent = time || '';
+}
+applyDailyMessage(document.getElementById('cfg-message').value.trim(), document.getElementById('cfg-time').value);
+
+const pushNotif = document.getElementById('push-notif');
+setTimeout(() => { pushNotif.classList.add('show'); }, 700);
+document.getElementById('push-notif-close').addEventListener('click', () => {
+  pushNotif.classList.remove('show');
+});
+
+document.getElementById('cfg-save').addEventListener('click', () => {
+  const message = document.getElementById('cfg-message').value.trim();
+  const time = document.getElementById('cfg-time').value;
+  applyDailyMessage(message, time);
+  document.getElementById('cfg-confirm-time').textContent = time;
+  document.getElementById('cfg-confirm').style.display = 'block';
+  pushNotif.classList.remove('show');
+  setTimeout(() => { pushNotif.classList.add('show'); }, 400);
+});
+
+const mealPhotoInput = document.getElementById('meal-photo');
+const mealPhotoPreview = document.getElementById('meal-photo-preview');
+const mealPhotoIcon = document.getElementById('meal-photo-icon');
+let mealPhotoData = null;
+mealPhotoInput.addEventListener('change', () => {
+  const file = mealPhotoInput.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    mealPhotoData = e.target.result;
+    mealPhotoPreview.src = mealPhotoData;
+    mealPhotoPreview.style.display = 'block';
+    mealPhotoIcon.style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+});
+
+function setupYesNoTrigger(yesId, noId, wrapId, triggerId, otherId) {
+  const yes = document.getElementById(yesId);
+  const no = document.getElementById(noId);
+  const wrap = document.getElementById(wrapId);
+  const trigger = document.getElementById(triggerId);
+  const other = document.getElementById(otherId);
+  const toggle = () => { wrap.style.display = yes.checked ? 'block' : 'none'; };
+  yes.addEventListener('change', toggle);
+  no.addEventListener('change', toggle);
+  trigger.addEventListener('change', () => {
+    other.style.display = trigger.value === 'Autre' ? 'block' : 'none';
+  });
+}
+setupYesNoTrigger('snack-yes', 'snack-no', 'snack-trigger-wrap', 'snack-trigger', 'snack-trigger-other');
+setupYesNoTrigger('sugar-yes', 'sugar-no', 'sugar-trigger-wrap', 'sugar-trigger', 'sugar-trigger-other');
+
+function resetYesNoTrigger(noId, wrapId, triggerId, otherId) {
+  document.getElementById(noId).checked = true;
+  document.getElementById(wrapId).style.display = 'none';
+  document.getElementById(triggerId).value = '';
+  document.getElementById(otherId).style.display = 'none';
+  document.getElementById(otherId).value = '';
+}
+
+document.getElementById('add-journal-entry').addEventListener('click', () => {
+  const reasonEl = document.getElementById('meal-reason');
+  const commentEl = document.getElementById('meal-comment');
+  const reason = reasonEl.value;
+  const comment = commentEl.value.trim();
+  const snackCount = document.getElementById('snack-count').value;
+  const isSnack = document.getElementById('snack-yes').checked;
+  const isSugar = document.getElementById('sugar-yes').checked;
+
+  const now = new Date();
+  const time = now.getHours().toString().padStart(2, '0') + 'h' + now.getMinutes().toString().padStart(2, '0');
+
+  const entry = document.createElement('div');
+  entry.style.cssText = 'border:1px solid var(--border); border-radius:8px; padding:10px; display:flex; gap:10px;';
+
+  let photoHtml = '';
+  if (mealPhotoData) {
+    photoHtml = '<img src="' + mealPhotoData + '" style="width:48px; height:48px; object-fit:cover; border-radius:6px; flex-shrink:0;">';
+  }
+
+  let flagsHtml = '<div style="font-size:12px; color:var(--muted); margin-top:2px;">Collations : ' + snackCount + '</div>';
+  if (isSnack) {
+    const trigger = document.getElementById('snack-trigger').value;
+    const other = document.getElementById('snack-trigger-other').value.trim();
+    const label = trigger === 'Autre' && other ? other : trigger;
+    flagsHtml += '<div style="font-size:12px; color:var(--warn-text); margin-top:4px;">Grignotage' + (label ? ' — déclencheur : ' + label : '') + '</div>';
+  }
+  if (isSugar) {
+    const trigger = document.getElementById('sugar-trigger').value;
+    const other = document.getElementById('sugar-trigger-other').value.trim();
+    const label = trigger === 'Autre' && other ? other : trigger;
+    flagsHtml += '<div style="font-size:12px; color:var(--danger-text); margin-top:4px;">Écart sucré' + (label ? ' — déclencheur : ' + label : '') + '</div>';
+  }
+
+  entry.innerHTML =
+    photoHtml +
+    '<div style="flex:1;">' +
+      '<div style="display:flex; justify-content:space-between; gap:8px;">' +
+        '<span style="font-size:13px; font-weight:600;">' + (reason || 'Repas') + '</span>' +
+        '<span style="font-size:11px; color:var(--muted); white-space:nowrap;">Aujourd’hui, ' + time + '</span>' +
+      '</div>' +
+      (comment ? '<div style="font-size:13px; margin-top:2px;">' + comment + '</div>' : '') +
+      flagsHtml +
+    '</div>';
+
+  document.getElementById('journal-entries').prepend(entry);
+
+  reasonEl.value = '';
+  commentEl.value = '';
+  document.getElementById('snack-count').value = '0';
+  resetYesNoTrigger('snack-no', 'snack-trigger-wrap', 'snack-trigger', 'snack-trigger-other');
+  resetYesNoTrigger('sugar-no', 'sugar-trigger-wrap', 'sugar-trigger', 'sugar-trigger-other');
+  mealPhotoData = null;
+  mealPhotoPreview.style.display = 'none';
+  mealPhotoIcon.style.display = 'block';
+  mealPhotoInput.value = '';
+});
+
+const tabP = document.getElementById('tab-patiente');
+const tabN = document.getElementById('tab-nutri');
+const viewP = document.getElementById('patient-app');
+const viewN = document.getElementById('view-nutri');
+tabP.addEventListener('click', () => {
+  viewP.style.display = 'block'; viewN.style.display = 'none';
+  tabP.classList.add('active'); tabN.classList.remove('active');
+});
+tabN.addEventListener('click', () => {
+  viewN.style.display = 'block'; viewP.style.display = 'none';
+  tabN.classList.add('active'); tabP.classList.remove('active');
+});
+</script>
+</body>
+</html>
