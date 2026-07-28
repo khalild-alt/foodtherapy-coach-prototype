@@ -39,7 +39,20 @@
   .supp-row { display: flex; align-items: center; gap: 10px; border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; margin-bottom: 8px; }
   .supp-time { font-size: 13px; color: var(--muted); min-width: 44px; }
   .supp-row label { display: flex; align-items: center; gap: 6px; font-size: 14px; flex: 1; }
+  .supp-block { border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; margin-bottom: 10px; }
+  .supp-time-label { font-size: 12px; color: var(--muted); font-weight: 600; margin-bottom: 6px; }
+  .supp-item { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 6px 0; }
+  .supp-item + .supp-item { border-top: 1px solid var(--border); }
+  .supp-name { font-size: 14px; }
+  .supp-state { display: flex; gap: 4px; }
+  .supp-state button { font-size: 11px; padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); background: #fff; cursor: pointer; color: var(--muted); }
+  .supp-state button.active[data-state="pris"] { background: var(--accent-bg); border-color: #085041; color: #085041; }
+  .supp-state button.active[data-state="reporte"] { background: var(--warn-bg); border-color: var(--warn-text); color: var(--warn-text); }
+  .supp-state button.active[data-state="oublie"] { background: var(--danger-bg); border-color: var(--danger-text); color: var(--danger-text); }
   select, input[type=text], input[type=time] { width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: 6px; font-size: 13px; background: #fff; }
+  input[type=range] { width: 100%; accent-color: #085041; height: 20px; }
+  .slider-label { font-size: 12px; color: var(--muted); display: flex; justify-content: space-between; margin-bottom: 2px; }
+  .slider-label b { color: var(--text); font-weight: 600; }
   button.primary { background: var(--text); color: #fff; border: none; border-radius: 8px; padding: 10px; font-size: 14px; cursor: pointer; width: 100%; margin-top: 10px; }
   .chat-bubble { border-radius: 8px; padding: 8px 12px; font-size: 14px; max-width: 75%; margin-bottom: 8px; }
   .chat-them { background: #F1F0EA; }
@@ -124,17 +137,34 @@
             <button class="push-notif-close" id="push-notif-close" aria-label="Fermer">✕</button>
           </div>
           <div class="phone-content" id="view-patiente">
-    <div class="row" style="margin-bottom:16px;">
+    <div class="row" style="margin-bottom:12px;">
       <div>
-        <div style="font-weight:600;" id="greeting"></div>
-        <div style="font-size:13px; color:var(--muted);">Lundi 27 juillet</div>
+        <div style="font-weight:600; font-size:16px;" id="greeting"></div>
+        <div style="font-size:13px; color:var(--muted);" id="day-counter">Jour 34 de votre accompagnement</div>
       </div>
       <div class="avatar" style="background:var(--accent-bg); color:#085041;">CM</div>
     </div>
 
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:8px; margin-bottom:4px;">
+        <div style="font-size:12px; color:var(--muted); font-weight:600;">Objectif principal de la semaine</div>
+        <div style="font-size:11px; color:var(--muted); text-align:right; white-space:nowrap;">Consultation dans<br><strong style="color:var(--text); font-size:13px;" id="next-consult-days">5 jours</strong></div>
+      </div>
+      <div style="font-weight:600; font-size:15px;" id="main-objective">Petit-déjeuner protéiné</div>
+    </div>
+
+    <div class="card" style="background:var(--accent-bg); border-color:var(--accent-bg); display:flex; gap:10px;">
+      <div style="font-size:20px; line-height:1;">🏆</div>
+      <div>
+        <div style="font-size:12px; color:#085041; font-weight:600; margin-bottom:2px;">Dernière victoire</div>
+        <div style="font-size:14px; color:#085041; line-height:1.5;" id="last-win">Bravo, 5 jours d'affilée avec un petit-déjeuner protéiné !</div>
+      </div>
+    </div>
+
     <div class="card" style="background:var(--accent-bg); border-color:var(--accent-bg);">
       <div style="font-size:12px; color:#085041; margin-bottom:4px;">Défi de la semaine</div>
-      <div style="font-weight:600; color:#085041;">Semaine sans boissons sucrées</div>
+      <div style="font-weight:600; color:#085041;" id="weekly-challenge">Semaine sans boissons sucrées</div>
+      <div style="font-size:12px; color:#085041; margin-top:6px; opacity:.85;" id="weekly-challenge-reason">Fixé en consultation : vous avez identifié les boissons sucrées comme principal frein à la perte de poids.</div>
     </div>
 
     <div class="card">
@@ -142,8 +172,12 @@
       <div id="daily-message" style="font-size:14px; line-height:1.6;"></div>
     </div>
 
-    <div class="label">Journal alimentaire</div>
+    <div class="label">Mon Journal de Progression</div>
     <div class="card">
+      <div style="font-size:12px; color:var(--muted); font-weight:600; margin-bottom:6px;">Avant le repas</div>
+      <label class="slider-label" for="hunger-level">Niveau de faim <b id="hunger-value">5</b></label>
+      <input type="range" id="hunger-level" min="0" max="10" value="5" style="margin-bottom:14px;">
+
       <label style="font-size:12px; color:var(--muted); display:block; margin-bottom:6px;">Photos du repas</label>
       <div id="meal-photos-row" style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
         <label for="meal-photo" id="meal-photo-add" style="display:flex; align-items:center; justify-content:center; width:56px; height:56px; border:1px dashed var(--border); border-radius:8px; cursor:pointer; flex-shrink:0; background:#fff; font-size:20px; color:var(--muted);">+</label>
@@ -213,6 +247,23 @@
         <input type="text" id="sugar-trigger-other" placeholder="Précisez..." style="display:none; margin-top:6px;">
       </div>
 
+      <div style="border-top:1px solid var(--border); margin:14px 0 12px;"></div>
+
+      <div style="font-size:12px; color:var(--muted); font-weight:600; margin-bottom:6px;">Après le repas</div>
+      <label class="slider-label" for="satiety-level">Niveau de satiété <b id="satiety-value">5</b></label>
+      <input type="range" id="satiety-level" min="0" max="10" value="5" style="margin-bottom:12px;">
+
+      <label style="font-size:12px; color:var(--muted);">Comment vous sentez-vous après ce repas ?</label>
+      <select id="post-meal-feeling" style="margin-bottom:12px;">
+        <option value="">Sélectionner...</option>
+        <option>En pleine forme</option>
+        <option>Léger(ère) et satisfait(e)</option>
+        <option>Encore un peu faim</option>
+        <option>Ballonné(e)</option>
+        <option>Trop plein(e)</option>
+        <option>Fatigué(e)</option>
+      </select>
+
       <label style="font-size:12px; color:var(--muted);">Commentaire</label>
       <textarea id="meal-comment" rows="2" placeholder="Un mot sur ce moment..." style="width:100%; padding:6px 8px; border:1px solid var(--border); border-radius:6px; font-size:13px; resize:vertical; font-family:inherit;"></textarea>
 
@@ -222,9 +273,67 @@
     </div>
 
     <div class="label">Compléments à prendre</div>
-    <div class="supp-row"><span class="supp-time">08h00</span><label><input type="checkbox">Oméga 3</label><label><input type="checkbox">Vitamine D</label></div>
-    <div class="supp-row"><span class="supp-time">13h00</span><label><input type="checkbox">Berbérine</label></div>
-    <div class="supp-row"><span class="supp-time">22h00</span><label><input type="checkbox">Magnésium</label></div>
+    <div class="card">
+      <div class="row" style="margin-bottom:4px;">
+        <span style="font-size:12px; color:var(--muted); font-weight:600;">Observance des compléments</span>
+        <span style="font-size:15px; font-weight:600; color:#085041;">87%</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" style="width:87%;"></div></div>
+    </div>
+
+    <div class="supp-block">
+      <div class="supp-time-label">08h00</div>
+      <div class="supp-item">
+        <span class="supp-name">Oméga 3</span>
+        <div class="supp-state" data-supp="omega3">
+          <button type="button" data-state="pris" class="active">Pris</button>
+          <button type="button" data-state="reporte">Reporté</button>
+          <button type="button" data-state="oublie">Oublié</button>
+        </div>
+      </div>
+      <div class="supp-item">
+        <span class="supp-name">Vitamine D</span>
+        <div class="supp-state" data-supp="vitd">
+          <button type="button" data-state="pris" class="active">Pris</button>
+          <button type="button" data-state="reporte">Reporté</button>
+          <button type="button" data-state="oublie">Oublié</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="supp-block">
+      <div class="supp-time-label">13h00</div>
+      <div class="supp-item">
+        <span class="supp-name">Berbérine</span>
+        <div class="supp-state" data-supp="berberine">
+          <button type="button" data-state="pris">Pris</button>
+          <button type="button" data-state="reporte">Reporté</button>
+          <button type="button" data-state="oublie">Oublié</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="supp-block">
+      <div class="supp-time-label">22h00</div>
+      <div class="supp-item">
+        <span class="supp-name">Magnésium</span>
+        <div class="supp-state" data-supp="magnesium">
+          <button type="button" data-state="pris">Pris</button>
+          <button type="button" data-state="reporte">Reporté</button>
+          <button type="button" data-state="oublie">Oublié</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="label">Calendrier des prises</div>
+    <div class="card">
+      <div id="supp-calendar" style="display:grid; grid-template-columns:repeat(7, 1fr); gap:6px;"></div>
+      <div style="display:flex; gap:12px; margin-top:10px; font-size:11px; color:var(--muted); flex-wrap:wrap;">
+        <span><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#085041; margin-right:4px;"></span>Complet</span>
+        <span><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--warn-text); margin-right:4px;"></span>Partiel</span>
+        <span><span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--danger-text); margin-right:4px;"></span>Manqué</span>
+      </div>
+    </div>
 
     <div class="label">Questionnaire du jour — 1 minute</div>
     <div class="card">
@@ -297,11 +406,69 @@
       </div>
     </div>
 
+    <div class="card">
+      <div style="font-size:12px; color:var(--muted); font-weight:600; margin-bottom:8px;">Photos mensuelles</div>
+      <div style="font-size:12px; color:var(--muted); margin-bottom:10px;">Une photo par mois pour visualiser votre évolution.</div>
+      <div id="progress-photos-row" style="display:flex; flex-wrap:wrap; gap:8px;">
+        <label for="progress-photo" id="progress-photo-add" style="display:flex; flex-direction:column; align-items:center; justify-content:center; width:64px; height:64px; border:1px dashed var(--border); border-radius:8px; cursor:pointer; flex-shrink:0; background:#fff; font-size:18px; color:var(--muted);">+</label>
+        <div class="photo-thumb" style="width:64px; height:64px; border-radius:8px; background:var(--surface-1, #EFEEE8); display:flex; align-items:center; justify-content:center; flex-direction:column; gap:2px; flex-shrink:0;">
+          <span style="font-size:16px;">🧍</span>
+          <span style="font-size:9px; color:var(--muted);">Mai</span>
+        </div>
+        <div class="photo-thumb" style="width:64px; height:64px; border-radius:8px; background:var(--surface-1, #EFEEE8); display:flex; align-items:center; justify-content:center; flex-direction:column; gap:2px; flex-shrink:0;">
+          <span style="font-size:16px;">🧍</span>
+          <span style="font-size:9px; color:var(--muted);">Juin</span>
+        </div>
+      </div>
+      <input type="file" id="progress-photo" accept="image/*" style="display:none;">
+    </div>
+
     <div class="label">Analyse Oligoscan</div>
     <div class="card">
       <div class="alert" style="background:var(--danger-bg); color:var(--danger-text);">⚠ Magnésium bas — pensez à votre complément du soir</div>
       <div class="alert" style="background:var(--warn-bg); color:var(--warn-text);">⚠ Zinc sous le seuil recommandé</div>
       <div class="alert" style="background:var(--warn-bg); color:var(--warn-text); margin-bottom:0;">⚠ Calcium au-dessus du seuil recommandé</div>
+    </div>
+
+    <div class="label">Carnet de consultation</div>
+    <div class="card">
+      <div style="font-size:12px; color:var(--muted); font-weight:600; margin-bottom:8px;">Résumé de la dernière consultation — 13 juillet</div>
+      <table>
+        <tr><td style="color:var(--muted);">Adhérence</td><td style="text-align:right; font-weight:600;">82%</td></tr>
+        <tr><td style="color:var(--muted);">Objectif atteint</td><td style="text-align:right;">Petit-déjeuner</td></tr>
+        <tr><td style="color:var(--muted); border-bottom:none;">À travailler</td><td style="text-align:right; border-bottom:none;">Grignotage du soir</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <div style="font-size:12px; color:var(--muted); font-weight:600; margin-bottom:8px;">Plan personnalisé</div>
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <div style="display:flex; align-items:center; gap:8px; font-size:14px;"><span style="color:#085041;">●</span>Petit-déjeuner protéiné</div>
+        <div style="display:flex; align-items:center; gap:8px; font-size:14px;"><span style="color:#085041;">●</span>Marcher 30 minutes</div>
+        <div style="display:flex; align-items:center; gap:8px; font-size:14px;"><span style="color:#085041;">●</span>Dormir avant 23h</div>
+        <div style="display:flex; align-items:center; gap:8px; font-size:14px;"><span style="color:#085041;">●</span>Boire 2 litres d'eau</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="font-size:12px; color:var(--muted); font-weight:600; margin-bottom:8px;">Documents</div>
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <div style="display:flex; align-items:center; gap:10px; border:1px solid var(--border); border-radius:8px; padding:8px 10px;">
+          <span style="font-size:16px;">📄</span>
+          <div style="flex:1;"><div style="font-size:13px; font-weight:600;">Analyse InBody</div><div style="font-size:11px; color:var(--muted);">13 juillet · PDF</div></div>
+          <button type="button" style="border:1px solid var(--border); border-radius:6px; background:#fff; padding:4px 10px; font-size:12px; cursor:pointer;">Voir</button>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; border:1px solid var(--border); border-radius:8px; padding:8px 10px;">
+          <span style="font-size:16px;">📄</span>
+          <div style="flex:1;"><div style="font-size:13px; font-weight:600;">Menu type</div><div style="font-size:11px; color:var(--muted);">13 juillet · PDF</div></div>
+          <button type="button" style="border:1px solid var(--border); border-radius:6px; background:#fff; padding:4px 10px; font-size:12px; cursor:pointer;">Voir</button>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; border:1px solid var(--border); border-radius:8px; padding:8px 10px;">
+          <span style="font-size:16px;">📄</span>
+          <div style="flex:1;"><div style="font-size:13px; font-weight:600;">Ordonnance compléments</div><div style="font-size:11px; color:var(--muted);">13 juillet · PDF</div></div>
+          <button type="button" style="border:1px solid var(--border); border-radius:6px; background:#fff; padding:4px 10px; font-size:12px; cursor:pointer;">Voir</button>
+        </div>
+      </div>
     </div>
 
     <div class="label">Messagerie</div>
@@ -353,6 +520,16 @@
       <div id="cfg-confirm" style="font-size:12px; color:#085041; margin-top:8px; display:none;">Notification programmée à <span id="cfg-confirm-time"></span> pour les patientes concernées.</div>
     </div>
 
+    <div class="label">Défi de la semaine — fixé en consultation</div>
+    <div class="card">
+      <label style="font-size:12px; color:var(--muted);">Défi</label>
+      <input type="text" id="cfg-challenge" value="Semaine sans boissons sucrées" style="margin-bottom:10px;">
+      <label style="font-size:12px; color:var(--muted);">Justification (pourquoi ce défi, discuté en consultation)</label>
+      <textarea id="cfg-challenge-reason" rows="2" style="width:100%; padding:6px 8px; border:1px solid var(--border); border-radius:6px; font-size:13px; resize:vertical; font-family:inherit; margin-bottom:10px;">Vous avez identifié les boissons sucrées comme principal frein à la perte de poids.</textarea>
+      <button class="primary" id="cfg-challenge-save" style="width:auto; margin-top:0; padding:8px 16px;">Enregistrer le défi</button>
+      <div id="cfg-challenge-confirm" style="font-size:12px; color:#085041; margin-top:8px; display:none;">Défi mis à jour pour la patiente.</div>
+    </div>
+
     <div class="label">Alertes</div>
     <div class="alert" style="background:var(--danger-bg); color:var(--danger-text);">⚠ Sarah B. — questionnaire non rempli depuis 4 jours</div>
     <div class="alert" style="background:var(--warn-bg); color:var(--warn-text);">⚠ Julie M. — oubli répété des compléments</div>
@@ -370,8 +547,9 @@
       </tbody>
     </table>
 
-    <div class="label">Résumé pré-consultation — Camille M.</div>
+    <div class="label">Carnet de consultation — Camille M.</div>
     <div class="card">
+      <div style="font-size:12px; color:var(--muted); font-weight:600; margin-bottom:8px;">Résumé de la dernière consultation — 13 juillet</div>
       <table>
         <tr><td style="color:var(--muted);">Objectif principal</td><td style="text-align:right; font-weight:600;">Petit-déjeuner protéiné</td></tr>
         <tr><td style="color:var(--muted);">Adhérence</td><td style="text-align:right; font-weight:600;">82%</td></tr>
@@ -381,6 +559,94 @@
         <tr><td style="color:var(--muted);">Objectif non atteint</td><td style="text-align:right;">Marche</td></tr>
         <tr><td style="color:var(--muted); border-bottom:none;">Principal frein</td><td style="text-align:right; border-bottom:none;">Grignotage du soir</td></tr>
       </table>
+    </div>
+
+    <div class="card">
+      <div style="font-size:12px; color:var(--muted); font-weight:600; margin-bottom:8px;">Plan personnalisé</div>
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <div style="display:flex; align-items:center; gap:8px; font-size:14px;"><span style="color:#085041;">●</span>Petit-déjeuner protéiné</div>
+        <div style="display:flex; align-items:center; gap:8px; font-size:14px;"><span style="color:#085041;">●</span>Marcher 30 minutes</div>
+        <div style="display:flex; align-items:center; gap:8px; font-size:14px;"><span style="color:#085041;">●</span>Dormir avant 23h</div>
+        <div style="display:flex; align-items:center; gap:8px; font-size:14px;"><span style="color:#085041;">●</span>Boire 2 litres d'eau</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="font-size:12px; color:var(--muted); font-weight:600; margin-bottom:8px;">Documents</div>
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <div style="display:flex; align-items:center; gap:10px; border:1px solid var(--border); border-radius:8px; padding:8px 10px;">
+          <span style="font-size:16px;">📄</span>
+          <div style="flex:1;"><div style="font-size:13px; font-weight:600;">Analyse InBody</div><div style="font-size:11px; color:var(--muted);">13 juillet · PDF</div></div>
+          <button type="button" style="border:1px solid var(--border); border-radius:6px; background:#fff; padding:4px 10px; font-size:12px; cursor:pointer;">Voir</button>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; border:1px solid var(--border); border-radius:8px; padding:8px 10px;">
+          <span style="font-size:16px;">📄</span>
+          <div style="flex:1;"><div style="font-size:13px; font-weight:600;">Menu type</div><div style="font-size:11px; color:var(--muted);">13 juillet · PDF</div></div>
+          <button type="button" style="border:1px solid var(--border); border-radius:6px; background:#fff; padding:4px 10px; font-size:12px; cursor:pointer;">Voir</button>
+        </div>
+        <div style="display:flex; align-items:center; gap:10px; border:1px solid var(--border); border-radius:8px; padding:8px 10px;">
+          <span style="font-size:16px;">📄</span>
+          <div style="flex:1;"><div style="font-size:13px; font-weight:600;">Ordonnance compléments</div><div style="font-size:11px; color:var(--muted);">13 juillet · PDF</div></div>
+          <button type="button" style="border:1px solid var(--border); border-radius:6px; background:#fff; padding:4px 10px; font-size:12px; cursor:pointer;">Voir</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="label">Score Santé — Camille M.</div>
+    <div class="card">
+      <svg viewBox="0 0 200 120" width="200" height="120" style="display:block; margin:0 auto;">
+        <path d="M20,100 A80,80 0 0 1 180,100" fill="none" stroke="var(--border)" stroke-width="14" stroke-linecap="round"></path>
+        <path d="M20,100 A80,80 0 0 1 180,100" fill="none" stroke="#085041" stroke-width="14" stroke-linecap="round" stroke-dasharray="251.2" stroke-dashoffset="50.2"></path>
+        <text x="100" y="95" font-size="28" font-weight="600" fill="var(--text)" text-anchor="middle">80%</text>
+        <text x="100" y="112" font-size="11" fill="var(--muted)" text-anchor="middle">Score santé global</text>
+      </svg>
+
+      <div style="display:flex; flex-direction:column; gap:10px; margin-top:8px;">
+        <div>
+          <div class="row" style="margin-bottom:4px;"><span style="font-size:13px;">Assiduité du régime</span><span style="font-size:13px; font-weight:600;">88%</span></div>
+          <div class="progress-track"><div class="progress-fill" style="width:88%;"></div></div>
+        </div>
+        <div>
+          <div class="row" style="margin-bottom:4px;"><span style="font-size:13px;">Sommeil</span><span style="font-size:13px; font-weight:600;">72%</span></div>
+          <div class="progress-track"><div class="progress-fill" style="width:72%;"></div></div>
+        </div>
+        <div>
+          <div class="row" style="margin-bottom:4px;"><span style="font-size:13px;">Hydratation</span><span style="font-size:13px; font-weight:600;">95%</span></div>
+          <div class="progress-track"><div class="progress-fill" style="width:95%;"></div></div>
+        </div>
+        <div>
+          <div class="row" style="margin-bottom:4px;"><span style="font-size:13px;">Activité</span><span style="font-size:13px; font-weight:600;">81%</span></div>
+          <div class="progress-track"><div class="progress-fill" style="width:81%;"></div></div>
+        </div>
+        <div>
+          <div class="row" style="margin-bottom:4px;"><span style="font-size:13px;">Compléments</span><span style="font-size:13px; font-weight:600;">92%</span></div>
+          <div class="progress-track"><div class="progress-fill" style="width:92%;"></div></div>
+        </div>
+        <div>
+          <div class="row" style="margin-bottom:4px;"><span style="font-size:13px;">Gestion du stress</span><span style="font-size:13px; font-weight:600;">63%</span></div>
+          <div class="progress-track"><div class="progress-fill" style="width:63%;"></div></div>
+        </div>
+        <div>
+          <div class="row" style="margin-bottom:4px;"><span style="font-size:13px;">Écarts sucré / salé</span><span style="font-size:13px; font-weight:600; color:var(--warn-text);">28%</span></div>
+          <div class="progress-track"><div class="progress-fill" style="width:28%; background:var(--warn-text);"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="label">Synthèse IA <span style="text-transform:none; font-weight:400;">— exemple illustratif</span></div>
+    <div class="card" style="border-color:var(--pro-bg);">
+      <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px;">
+        <span style="font-size:16px;">✨</span>
+        <span style="font-size:12px; color:var(--muted); font-weight:600;">Généré automatiquement entre les deux consultations</span>
+      </div>
+      <p style="font-size:14px; line-height:1.6; margin:0 0 10px;">Sur les 14 derniers jours, Camille a maintenu une bonne régularité sur le petit-déjeuner protéiné (12/14 jours) et une hydratation constante. Deux freins reviennent régulièrement : un grignotage sucré en soirée (surtout les jours de forte charge de travail) et une marche du matin souvent reportée, corrélée à un sommeil plus court la veille.</p>
+      <p style="font-size:13px; color:var(--muted); font-weight:600; margin:0 0 4px;">Axes suggérés pour la prochaine consultation</p>
+      <ul style="font-size:14px; line-height:1.6; margin:0 0 10px; padding-left:18px;">
+        <li>Travailler une alternative au grignotage du soir (collation prévue à l'avance)</li>
+        <li>Explorer un créneau de marche plus réaliste que le matin</li>
+        <li>Renforcer l'hygiène de sommeil pour soutenir l'activité physique</li>
+      </ul>
+      <div style="font-size:11px; color:var(--muted); border-top:1px solid var(--border); padding-top:8px;">Exemple à titre illustratif — l'IA agit uniquement comme assistant : elle résume et suggère, elle ne remplace jamais votre analyse ni vos décisions.</div>
     </div>
 
     <div class="label">Dossier patient — Camille M.</div>
@@ -439,6 +705,21 @@
         <tr><td style="border-bottom:none;">Potassium</td><td style="border-bottom:none;">Normal</td><td class="ok" style="border-bottom:none;">Normal</td></tr>
       </table>
     </div>
+
+    <div class="card">
+      <div style="font-size:12px; color:var(--muted); font-weight:600; margin-bottom:8px;">Photos mensuelles</div>
+      <div style="display:flex; flex-wrap:wrap; gap:8px;">
+        <div style="width:64px; height:64px; border-radius:8px; background:#EFEEE8; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:2px;">
+          <span style="font-size:16px;">🧍</span>
+          <span style="font-size:9px; color:var(--muted);">Mai</span>
+        </div>
+        <div style="width:64px; height:64px; border-radius:8px; background:#EFEEE8; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:2px;">
+          <span style="font-size:16px;">🧍</span>
+          <span style="font-size:9px; color:var(--muted);">Juin</span>
+        </div>
+        <div style="width:64px; height:64px; border-radius:8px; border:1px dashed var(--border); display:flex; align-items:center; justify-content:center; font-size:11px; color:var(--muted); text-align:center;">En attente<br>juillet</div>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -467,6 +748,14 @@ document.getElementById('cfg-save').addEventListener('click', () => {
   document.getElementById('cfg-confirm').style.display = 'block';
   pushNotif.classList.remove('show');
   setTimeout(() => { pushNotif.classList.add('show'); }, 400);
+});
+
+document.getElementById('cfg-challenge-save').addEventListener('click', () => {
+  const challenge = document.getElementById('cfg-challenge').value.trim();
+  const reason = document.getElementById('cfg-challenge-reason').value.trim();
+  document.getElementById('weekly-challenge').textContent = challenge;
+  document.getElementById('weekly-challenge-reason').textContent = reason;
+  document.getElementById('cfg-challenge-confirm').style.display = 'block';
 });
 
 function setupMultiPhoto(inputId, rowId, addId) {
@@ -519,6 +808,25 @@ function setupMultiPhoto(inputId, rowId, addId) {
 
 const mealPhotos = setupMultiPhoto('meal-photo', 'meal-photos-row', 'meal-photo-add');
 const snackPhotos = setupMultiPhoto('snack-photo', 'snack-photos-row', 'snack-photo-add');
+
+const progressPhotoInput = document.getElementById('progress-photo');
+const progressPhotoAdd = document.getElementById('progress-photo-add');
+const progressPhotosRow = document.getElementById('progress-photos-row');
+progressPhotoInput.addEventListener('change', () => {
+  const file = progressPhotoInput.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const months = ['Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+    const thumb = document.createElement('div');
+    thumb.style.cssText = 'width:64px; height:64px; border-radius:8px; overflow:hidden; position:relative; flex-shrink:0;';
+    thumb.innerHTML = '<img src="' + e.target.result + '" style="width:100%; height:100%; object-fit:cover;">' +
+      '<span style="position:absolute; bottom:0; left:0; right:0; background:rgba(0,0,0,0.5); color:#fff; font-size:9px; text-align:center; padding:1px 0;">' + months[new Date().getMonth()] + '</span>';
+    progressPhotosRow.insertBefore(thumb, progressPhotoAdd);
+  };
+  reader.readAsDataURL(file);
+  progressPhotoInput.value = '';
+});
 
 const snackPhotoWrap = document.getElementById('snack-photo-wrap');
 const snackCountSelect = document.getElementById('snack-count');
@@ -623,6 +931,34 @@ function setupYesNoTrigger(yesId, noId, wrapId, triggerId, otherId) {
 setupYesNoTrigger('snack-yes', 'snack-no', 'snack-trigger-wrap', 'snack-trigger', 'snack-trigger-other');
 setupYesNoTrigger('sugar-yes', 'sugar-no', 'sugar-trigger-wrap', 'sugar-trigger', 'sugar-trigger-other');
 
+function bindSlider(sliderId, valueId) {
+  const slider = document.getElementById(sliderId);
+  const value = document.getElementById(valueId);
+  slider.addEventListener('input', () => { value.textContent = slider.value; });
+}
+bindSlider('hunger-level', 'hunger-value');
+bindSlider('satiety-level', 'satiety-value');
+
+document.querySelectorAll('.supp-state').forEach((group) => {
+  group.querySelectorAll('button').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      group.querySelectorAll('button').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+    });
+  });
+});
+
+const suppCalendarEl = document.getElementById('supp-calendar');
+const suppStatuses = [1,1,1,1,2,1,1,1,1,1,3,1,1,1,2,1,1,1,1,1,1,3,1,1,1,1,2,1,1,1,1];
+const suppColors = { 1: '#085041', 2: 'var(--warn-text)', 3: 'var(--danger-text)' };
+const suppBgs = { 1: 'var(--accent-bg)', 2: 'var(--warn-bg)', 3: 'var(--danger-bg)' };
+suppStatuses.forEach((status, i) => {
+  const cell = document.createElement('div');
+  cell.style.cssText = 'aspect-ratio:1; display:flex; align-items:center; justify-content:center; border-radius:6px; font-size:11px; background:' + suppBgs[status] + '; color:' + suppColors[status] + ';';
+  cell.textContent = i + 1;
+  suppCalendarEl.appendChild(cell);
+});
+
 function resetYesNoTrigger(noId, wrapId, triggerId, otherId) {
   document.getElementById(noId).checked = true;
   document.getElementById(wrapId).style.display = 'none';
@@ -639,6 +975,9 @@ document.getElementById('add-journal-entry').addEventListener('click', () => {
   const snackCount = document.getElementById('snack-count').value;
   const isSnack = document.getElementById('snack-yes').checked;
   const isSugar = document.getElementById('sugar-yes').checked;
+  const hunger = document.getElementById('hunger-level').value;
+  const satiety = document.getElementById('satiety-level').value;
+  const feeling = document.getElementById('post-meal-feeling').value;
 
   const now = new Date();
   const time = now.getHours().toString().padStart(2, '0') + 'h' + now.getMinutes().toString().padStart(2, '0');
@@ -675,6 +1014,8 @@ document.getElementById('add-journal-entry').addEventListener('click', () => {
     flagsHtml += '<div style="font-size:12px; color:var(--danger-text); margin-top:4px;">Écart sucré' + (label ? ' — déclencheur : ' + label : '') + '</div>';
   }
 
+  const hungerSatietyHtml = '<div style="font-size:12px; color:var(--muted); margin-top:4px;">Faim avant : ' + hunger + '/10 · Satiété après : ' + satiety + '/10' + (feeling ? ' · ' + feeling : '') + '</div>';
+
   entry.innerHTML =
     photoHtml +
     '<div style="flex:1;">' +
@@ -682,6 +1023,7 @@ document.getElementById('add-journal-entry').addEventListener('click', () => {
         '<span style="font-size:13px; font-weight:600;">' + (reason || 'Repas') + '</span>' +
         '<span style="font-size:11px; color:var(--muted); white-space:nowrap;">Aujourd’hui, ' + time + '</span>' +
       '</div>' +
+      hungerSatietyHtml +
       (comment ? '<div style="font-size:13px; margin-top:2px;">' + comment + '</div>' : '') +
       flagsHtml +
     '</div>';
@@ -690,6 +1032,11 @@ document.getElementById('add-journal-entry').addEventListener('click', () => {
 
   reasonEl.value = '';
   commentEl.value = '';
+  document.getElementById('hunger-level').value = '5';
+  document.getElementById('hunger-value').textContent = '5';
+  document.getElementById('satiety-level').value = '5';
+  document.getElementById('satiety-value').textContent = '5';
+  document.getElementById('post-meal-feeling').value = '';
   snackCountSelect.value = '0';
   snackPhotoWrap.style.display = 'none';
   snackPhotos.reset();
