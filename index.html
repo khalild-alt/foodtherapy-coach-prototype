@@ -506,6 +506,17 @@
       <div class="kpi"><div style="font-size:12px; color:var(--muted);">RDV cette semaine</div><div class="num">9</div></div>
     </div>
 
+    <div class="label">Suivi personnalisé par patiente</div>
+    <div class="card">
+      <label style="font-size:12px; color:var(--muted);">Patiente</label>
+      <select id="patient-selector">
+        <option>Camille M.</option>
+        <option>Sarah B.</option>
+        <option>Julie M.</option>
+      </select>
+      <div style="font-size:11px; color:var(--muted); margin-top:8px;">Le message du jour et le défi de la semaine ci-dessous s'appliquent uniquement à la patiente sélectionnée.</div>
+    </div>
+
     <div class="label">Message du jour — notification du matin</div>
     <div class="card">
       <label style="font-size:12px; color:var(--muted);">Contenu du message</label>
@@ -517,7 +528,7 @@
         </div>
         <button class="primary" id="cfg-save" style="width:auto; margin-top:0; padding:8px 16px;">Enregistrer</button>
       </div>
-      <div id="cfg-confirm" style="font-size:12px; color:#085041; margin-top:8px; display:none;">Notification programmée à <span id="cfg-confirm-time"></span> pour les patientes concernées.</div>
+      <div id="cfg-confirm" style="font-size:12px; color:#085041; margin-top:8px; display:none;">Notification programmée à <span id="cfg-confirm-time"></span> pour <span id="cfg-confirm-patient"></span>.</div>
     </div>
 
     <div class="label">Défi de la semaine — fixé en consultation</div>
@@ -527,7 +538,7 @@
       <label style="font-size:12px; color:var(--muted);">Justification (pourquoi ce défi, discuté en consultation)</label>
       <textarea id="cfg-challenge-reason" rows="2" style="width:100%; padding:6px 8px; border:1px solid var(--border); border-radius:6px; font-size:13px; resize:vertical; font-family:inherit; margin-bottom:10px;">Vous avez identifié les boissons sucrées comme principal frein à la perte de poids.</textarea>
       <button class="primary" id="cfg-challenge-save" style="width:auto; margin-top:0; padding:8px 16px;">Enregistrer le défi</button>
-      <div id="cfg-challenge-confirm" style="font-size:12px; color:#085041; margin-top:8px; display:none;">Défi mis à jour pour la patiente.</div>
+      <div id="cfg-challenge-confirm" style="font-size:12px; color:#085041; margin-top:8px; display:none;">Défi mis à jour pour <span id="cfg-challenge-confirm-patient"></span>.</div>
     </div>
 
     <div class="label">Alertes</div>
@@ -740,21 +751,71 @@ document.getElementById('push-notif-close').addEventListener('click', () => {
   pushNotif.classList.remove('show');
 });
 
+const patientData = {
+  'Camille M.': {
+    message: "Bravo pour hier ! Aujourd'hui, concentrons-nous sur la marche du matin.",
+    time: '08:00',
+    challenge: 'Semaine sans boissons sucrées',
+    challengeReason: 'Vous avez identifié les boissons sucrées comme principal frein à la perte de poids.'
+  },
+  'Sarah B.': {
+    message: 'Chaque petite marche compte : essayez 10 minutes ce matin, même courtes.',
+    time: '07:30',
+    challenge: 'Une marche de 10 minutes chaque jour',
+    challengeReason: "L'objectif de 30 minutes semblait trop ambitieux tout de suite : on démarre petit pour construire l'habitude."
+  },
+  'Julie M.': {
+    message: 'Pensez à vos compléments du matin, ils font la différence sur la durée.',
+    time: '08:30',
+    challenge: 'Prendre les compléments à heure fixe',
+    challengeReason: 'Les oublis répétés viennent surtout d\'un manque de routine fixe le matin.'
+  }
+};
+
+const patientSelector = document.getElementById('patient-selector');
+const cfgMessageEl = document.getElementById('cfg-message');
+const cfgTimeEl = document.getElementById('cfg-time');
+const cfgChallengeEl = document.getElementById('cfg-challenge');
+const cfgChallengeReasonEl = document.getElementById('cfg-challenge-reason');
+
+function loadPatientConfig(name) {
+  const data = patientData[name];
+  cfgMessageEl.value = data.message;
+  cfgTimeEl.value = data.time;
+  cfgChallengeEl.value = data.challenge;
+  cfgChallengeReasonEl.value = data.challengeReason;
+  document.getElementById('cfg-confirm').style.display = 'none';
+  document.getElementById('cfg-challenge-confirm').style.display = 'none';
+}
+patientSelector.addEventListener('change', () => loadPatientConfig(patientSelector.value));
+
 document.getElementById('cfg-save').addEventListener('click', () => {
-  const message = document.getElementById('cfg-message').value.trim();
-  const time = document.getElementById('cfg-time').value;
-  applyDailyMessage(message, time);
+  const selected = patientSelector.value;
+  const message = cfgMessageEl.value.trim();
+  const time = cfgTimeEl.value;
+  patientData[selected].message = message;
+  patientData[selected].time = time;
+  if (selected === 'Camille M.') {
+    applyDailyMessage(message, time);
+    pushNotif.classList.remove('show');
+    setTimeout(() => { pushNotif.classList.add('show'); }, 400);
+  }
   document.getElementById('cfg-confirm-time').textContent = time;
+  document.getElementById('cfg-confirm-patient').textContent = selected;
   document.getElementById('cfg-confirm').style.display = 'block';
-  pushNotif.classList.remove('show');
-  setTimeout(() => { pushNotif.classList.add('show'); }, 400);
 });
 
 document.getElementById('cfg-challenge-save').addEventListener('click', () => {
-  const challenge = document.getElementById('cfg-challenge').value.trim();
-  const reason = document.getElementById('cfg-challenge-reason').value.trim();
-  document.getElementById('weekly-challenge').textContent = challenge;
-  document.getElementById('weekly-challenge-reason').textContent = reason;
+  const selected = patientSelector.value;
+  const challenge = cfgChallengeEl.value.trim();
+  const reason = cfgChallengeReasonEl.value.trim();
+  patientData[selected].challenge = challenge;
+  patientData[selected].challengeReason = reason;
+  if (selected === 'Camille M.') {
+    document.getElementById('weekly-challenge').textContent = challenge;
+    document.getElementById('weekly-challenge-reason').textContent = reason;
+  }
+  document.getElementById('cfg-challenge-confirm-patient').textContent = selected;
   document.getElementById('cfg-challenge-confirm').style.display = 'block';
 });
 
